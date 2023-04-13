@@ -1,3 +1,9 @@
+//OpenGLプロジェクト
+// 作成日：2023/4/13
+// 作成者：TOU
+// 更新日：2023/4/13    現代のOpenGLをコードを更新した
+// 
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -13,6 +19,7 @@ int main(void)
     if (!glfwInit())
         return -1;
 
+    /* Create a windowed mode window and its OpenGL context */
     glewInit();
 
     /* Create a windowed mode window and its OpenGL context */
@@ -31,6 +38,7 @@ int main(void)
         cout << "Error" << endl;
     }
 
+    // OpenGLのバージョンをコンソールに出力する
     cout << glGetString(GL_VERSION) << endl;
 
     /* Loop until the user closes the window */
@@ -43,7 +51,7 @@ int main(void)
 
         glVertex2f(-0.5f, -0.5f);
         glVertex2f(0.f, 0.5f);
-       glVertex2f(0.5f, -0.5f);
+        glVertex2f(0.5f, -0.5f);
 
         glVertex2f(1.f, 1.f);
         glVertex2f(0.f, 0.f);
