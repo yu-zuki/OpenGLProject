@@ -1,71 +1,158 @@
-//OpenGLプロジェクト
-// 作成日：2023/4/13
-// 作成者：TOU
-// 更新日：2023/4/13    現代のOpenGLをコードを更新した
+// OpenGL僾儘僌儔儉
+// 擔晅丗2023/4/13
+// 嶌惉幰丗TOU
+// 峏怴擔丗2023/4/13丂丂尰戙偺OpenGL傪巊梡偟偨僾儘僌儔儉傪捛壛偟偨丅
 // 
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
 
 using std::cout;
 using std::endl;
 
+static unsigned int CompileShader(unsigned int type, const std::string& source)
+{
+	// 僔僃乕僟乕偺嶌惉
+	unsigned int id = glCreateShader(type);
+
+	// 僔僃乕僟乕偺僜乕僗僐乕僪偺愝掕
+	const char* src = source.c_str();
+	glShaderSource(id, 1, &src, nullptr);
+	// 僔僃乕僟乕偺僐儞僷僀儖
+	glCompileShader(id);
+
+	// 僄儔乕僠僃僢僋
+	int result;
+
+	// 僔僃乕僟乕偺僐儞僷僀儖寢壥傪庢摼
+	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+	if (result == GL_FALSE)
+	{
+		// 僔僃乕僟乕偺僐儞僷僀儖寢壥偺挿偝傪庢摼
+		int length;
+		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+
+		// Stack椞堟偱儊儌儕乕傪妋曐偡傞
+		char* message = (char*)alloca(length * sizeof(char));
+
+		// 僔僃乕僟乕偺僐儞僷僀儖忣曬
+		glGetShaderInfoLog(id, length, &length, message);
+
+		// 僄儔乕偺昞帵
+		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") 
+			<< " shader!" << std::endl;
+
+		std::cout << message << std::endl;
+		glDeleteShader(id);
+		return 0;
+	}
+
+	return id;
+}
+// 僔僃乕僟乕偺僐儞僷僀儖
+static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
+{
+	// 僔僃乕僟乕偺嶌惉
+	unsigned int program = glCreateProgram();
+	// 捀揰僔僃乕僟乕偺僐儞僷僀儖
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
+	// 僼儔僌儊儞僩僔僃乕僟乕偺僐儞僷僀儖
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
+
+	//丂僾儘僌儔儉偵僔僃乕僟乕傪傾僞僢僠
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
+
+	// 僾儘僌儔儉偺儕儞僋
+	glLinkProgram(program);
+
+	// 僄儔乕僠僃僢僋
+	glValidateProgram(program);
+
+	// 僔僃乕僟乕偺拞娫僼傽僀儖傪嶍彍
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+
+	//丂僾儘僌儔儉偺曉媝
+	return program;
+}
+
+
 int main(void)
 {
-    GLFWwindow* window;
+	GLFWwindow* window;
 
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
+	/* Initialize the library */
+	if (!glfwInit())
+		return -1;
 
-    /* Create a windowed mode window and its OpenGL context */
-    glewInit();
+	/* Create a windowed mode window and its OpenGL context */
+	window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);
+	if (!window)
+	{
+		glfwTerminate();
+		return -1;
+	}
 
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
+	/* Make the window's context current */
+	glfwMakeContextCurrent(window);
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+	if (glewInit() != GLEW_OK)
+	{
+		cout << "Error" << endl;
+		return -1;
+	}
 
-    if (glfwInit() != GLEW_OK)
-    {
-        cout << "Error" << endl;
-    }
+	// OpenGL偺僶乕僕儑儞傪昞帵
+	cout << glGetString(GL_VERSION) << endl;
 
-    // OpenGLのバージョンをコンソールに出力する
-    cout << glGetString(GL_VERSION) << endl;
+	float positions[6] = {
+		-0.5f, -0.5f,
+		0.0f, 0.5f,
+		0.5f, -0.5f
+	};
 
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+	unsigned int buffer = 0;
+	// 僶僢僼傽偺惗惉
+	glGenBuffers(1, &buffer);
 
-        glBegin(GL_TRIANGLES);
+	// 僶僀儞僪丂僶僢僼傽偺庬椶丂僶僢僼傽偺ID
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-        glVertex2f(-0.5f, -0.5f);
-        glVertex2f(0.f, 0.5f);
-        glVertex2f(0.5f, -0.5f);
+	// 僶僢僼傽偵僨乕僞傪奿擺丂
+	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
 
-        glVertex2f(1.f, 1.f);
-        glVertex2f(0.f, 0.f);
-        glVertex2f(-1.f, -1.f);
+	// 捀揰懏惈偺桳岠壔
+	glEnableVertexAttribArray(0);
 
-		glEnd();
+	// 捀揰懏惈偺愝掕 
+	// 1:捀揰懏惈偺僀儞僨僢僋僗 
+	// 2:捀揰懏惈偺梫慺悢 
+	// 3:僨乕僞偺宆 
+	// 4:惓婯壔偡傞偐偳偆偐 
+	// 5:僨乕僞偺娫妘 
+	// 6:僨乕僞偺愭摢偐傜偺僆僼僙僢僩
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+	/* Loop until the user closes the window */
+	while (!glfwWindowShouldClose(window))
+	{
+		// Render here
+		glClear(GL_COLOR_BUFFER_BIT);
 
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
+		// 嶰妏宍傪昤夋
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    glfwTerminate();
-    return 0;
+		// Swap front and back buffers
+		glfwSwapBuffers(window);
+
+		// Poll for and process events
+		glfwPollEvents();
+
+	}
+
+	glfwTerminate();
+	return 0;
 }
