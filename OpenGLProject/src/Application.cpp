@@ -7,11 +7,59 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include <iostream>
 #include <fstream>
+#include <string>
+#include <sstream>
 
-using std::cout;
-using std::endl;
+struct ShaderProgramSource
+{
+	std::string VertexSource;
+	std::string FragmentSource;
+};
+
+static ShaderProgramSource ParseShader(const std::string& filepath)
+{
+	// シェーダーのソースコードの読み込み
+	std::ifstream stream(filepath);
+
+	// シェーダーの種類を判別するための列挙型
+	enum class ShaderType
+	{
+		NONE = -1, VERTEX = 0, FRAGMENT = 1
+	};
+
+	std::string line;
+	std::stringstream ss[2];
+	ShaderType type = ShaderType::NONE;
+
+	while (getline(stream, line))
+	{
+		// シェーダーの種類を判別
+		if (line.find("#shader") != std::string::npos)
+		{
+			// シェーダーの種類を表示
+			if (line.find("vertex") != std::string::npos)
+			{
+				// 頂点シェーダー
+				type = ShaderType::VERTEX;
+			}
+			else if (line.find("fragment") != std::string::npos)
+			{
+				// フラグメントシェーダー
+				type = ShaderType::FRAGMENT;
+			}
+		}
+		else
+		{
+			ss[(int)type] << line << '\n';
+		}
+	}
+
+	// シェーダーのソースコードを返却
+	return { ss[0].str(), ss[1].str() };
+}
 
 static unsigned int CompileShader(unsigned int type, const std::string& source)
 {
@@ -102,12 +150,12 @@ int main(void)
 
 	if (glewInit() != GLEW_OK)
 	{
-		cout << "Error" << endl;
+		std::cout << "Error" << std::endl;
 		return -1;
 	}
 
 	// OpenGLのバージョンを表示
-	cout << glGetString(GL_VERSION) << endl;
+	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	float positions[6] = {
 		-0.5f, -0.5f,
@@ -137,38 +185,15 @@ int main(void)
 	// 6:データの先頭からのオフセット
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 	
-	//---------------------------------------------------------------------
-	//							shaderのソースコード
-	//---------------------------------------------------------------------
 	
-	// 頂点シェーダーのソースコード　GPUに書き込み (顶点着色器)
-	std::string vertexShader =
-		"#version 330 core\n"
-		"\n"
-		"layout(location = 0) in vec4 position;\n"
-		"\n"
-		"void main()\n"
-		"{\n"
-		"	gl_Position = position;\n"
-		"}\n";
-
-	// フラグメントシェーダーのソースコード　GPUに書き込み（片段着色器）
-	std::string fragmentShader =
-		"#version 330 core\n"
-		"\n"
-		"layout(location = 0) out vec4 color;\n"
-		"\n"
-		"void main()\n"
-		"{\n"
-		"	color = vec4(1.0, 0.0, 0.0, 1.0);\n"
-		"}\n";
-
-	//---------------------------------------------------------------------
-	//							shaderのソースコード
-	//---------------------------------------------------------------------
+	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+	std::cout << "VERTEX" << std::endl;
+	std::cout << source.VertexSource << std::endl;
+	std::cout << "FRAGMENT" << std::endl;
+	std::cout << source.FragmentSource << std::endl;
 
 	// シェーダーのコンパイル
-	unsigned int shader = CreateShader(vertexShader, fragmentShader);
+	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 	// シェーダーの使用
 	glUseProgram(shader);
 

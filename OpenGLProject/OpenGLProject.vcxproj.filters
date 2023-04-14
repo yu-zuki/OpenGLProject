@@ -13,10 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="RScore">
+      <UniqueIdentifier>{4c4be338-5063-4e9c-9eb3-5649f0d31bc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RScore\shaders">
+      <UniqueIdentifier>{1980b48f-4cd2-420a-a8ec-20cef674f6a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp">
+    <ClCompile Include="src\Application.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\Basic.shader">
+      <Filter>RScore\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
