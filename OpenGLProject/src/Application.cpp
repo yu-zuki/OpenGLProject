@@ -1,8 +1,13 @@
 ﻿// OpenGLプログラム
-// 日付：2023/4/13
+// 作成日：2023/4/13
 // 作成者：TOU
-// 更新日：2023/4/13　　現代のOpenGLを使用したプログラムを追加した。
+// 
+// 更新日：2023/4/13　　OpenGLを使用したプログラムを追加した。
 // 更新日：2023/4/14	shaderのソースコードを追加しました。
+// 更新日：2023/4/15	シェーダーのコンパイルを追加しました。
+// 更新日：2023/4/18	VERTEX Buffersを追加しました。
+// 更新日：2023/4/20	indices Buffersを追加しました。
+// 更新日：2023/4/20	OpenGLのError Check機能を追加しました。glGetError()を使っての基本的なBugCheck。
 // 
 
 #include <GL/glew.h>
@@ -12,6 +17,29 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+
+//
+static void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+// OpenGLのエラーをチェックする
+static bool GLLogCall(const char* funtion, const char* file, int line)
+{
+	while (GLenum error = glGetError())
+	{
+		std::cout << "[OpenGL Error] (" << error << "): " << funtion << " " << file << ":" << line << std::endl;
+		return false;
+	}
+
+	return true;
+}
 
 struct ShaderProgramSource
 {
@@ -34,7 +62,7 @@ static ShaderProgramSource ParseShader(const std::string& filepath)
 	std::stringstream ss[2];
 	ShaderType type = ShaderType::NONE;
 
-	while (getline(stream, line))
+	while (getline(stream, line))	// 1行ずつ読み込み
 	{
 		// シェーダーの種類を判別
 		if (line.find("#shader") != std::string::npos)
@@ -53,6 +81,7 @@ static ShaderProgramSource ParseShader(const std::string& filepath)
 		}
 		else
 		{
+			// シェーダーのソースコードを追加
 			ss[(int)type] << line << '\n';
 		}
 	}
@@ -138,15 +167,15 @@ int main(void)
 		return -1;
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(1080, 1080, "Hello World", NULL, NULL);
 	if (!window)
 	{
+		// ウィンドウの作成に失敗
 		glfwTerminate();
 		return -1;
 	}
 
-	/* Make the window's context current */
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(window); 	
 
 	if (glewInit() != GLEW_OK)
 	{
@@ -157,10 +186,16 @@ int main(void)
 	// OpenGLのバージョンを表示
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
-	float positions[6] = {
-		-0.5f, -0.5f,
-		0.0f, 0.5f,
-		0.5f, -0.5f
+	float positions[] = {
+		-0.5f, -0.5f,	//0
+		 0.5f, -0.5f,	//1
+		 0.5f,  0.5f,	//2
+		 -0.5f,  0.5f,	//3
+	};
+
+	unsigned int indices[] = {
+		0, 1, 2,
+		2, 3, 0
 	};
 
 	unsigned int buffer = 0;
@@ -171,7 +206,7 @@ int main(void)
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
 	// バッファにデータを格納　
-	glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), positions, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, 6 * 2 *sizeof(float), positions, GL_STATIC_DRAW);
 
 	// 頂点属性の有効化
 	glEnableVertexAttribArray(0);
@@ -185,6 +220,17 @@ int main(void)
 	// 6:データの先頭からのオフセット
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 	
+	// インデックスバッファの生成
+	unsigned int ibo;
+	// バッファの生成
+	glGenBuffers(1, &ibo);
+
+	// バインド　バッファの種類　バッファのID
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+	// バッファにデータを格納　
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6  * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+
 	
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 	std::cout << "VERTEX" << std::endl;
@@ -199,13 +245,13 @@ int main(void)
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
-	{
+	{  
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// 三角形を描画
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+		
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
 
@@ -214,8 +260,8 @@ int main(void)
 
 	}
 
-	// シェーダーの削除
-	glDeleteProgram(shader);
+	// プログラムの削除
+	//glDeleteProgram(shader);
 
 	glfwTerminate();
 	return 0;
