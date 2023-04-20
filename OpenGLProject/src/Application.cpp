@@ -8,6 +8,8 @@
 // 更新日：2023/4/18	VERTEX Buffersを追加しました。
 // 更新日：2023/4/20	indices Buffersを追加しました。
 // 更新日：2023/4/20	OpenGLのError Check機能を追加しました。glGetError()を使っての基本的なBugCheck。
+// 更新日：2023/4/20	Uniformsを追加しました。
+// 
 // 
 
 #include <GL/glew.h>
@@ -243,14 +245,28 @@ int main(void)
 	// シェーダーの使用
 	glUseProgram(shader);
 
+	// シェーダー Color変数の取得
+	int location = glGetUniformLocation(shader, "u_Color");
+	ASSERT(location != -1);
+	// シェーダー Color変数の設定
+	GLCall( glUniform4f(location, 0.2, 0.3, 0.8, 1.0));
+
+	float r = 0.0f;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{  
 		// Render here
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		GLCall(glUniform4f(location, r, 0.3, 0.8, 1.0));
+		r += 0.001f;
+		if (r > 1.0f)
+		{
+			r = 0.0f;
+		}
+
 		// 三角形を描画
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_INT, nullptr));
+		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 		
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
