@@ -2,23 +2,28 @@
 // 作成日：2023/4/13
 // 作成者：TOU
 // 
-// 更新日：2023/4/13　　OpenGLを使用したプログラムを追加した。
+// 更新日：2023/4/13　　(Core-profile)OpenGLを使用したプログラムを追加した。
 // 更新日：2023/4/14	shaderのソースコードを追加しました。
 // 更新日：2023/4/15	シェーダーのコンパイルを追加しました。
 // 更新日：2023/4/18	VERTEX Buffersを追加しました。
 // 更新日：2023/4/20	indices Buffersを追加しました。
 // 更新日：2023/4/20	OpenGLのError Check機能を追加しました。glGetError()を使っての基本的なBugCheck。
 // 更新日：2023/4/20	Uniformsを追加しました。
-// 
+// 更新日：2023/4/21	Vertex arraysを追加しました。
+// 更新日：2023/4/27	オブジェクト指向でコードを再構成
 // 
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+
+#include "Renderer.h"
+
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 #define ASSERT(x) if (!(x)) __debugbreak();
 #define GLCall(x) GLClearError();\
@@ -41,6 +46,12 @@ static bool GLLogCall(const char* funtion, const char* file, int line)
 	}
 
 	return true;
+}
+
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
 }
 
 struct ShaderProgramSource
@@ -179,6 +190,9 @@ int main(void)
 
 	glfwMakeContextCurrent(window); 	
 
+	// V-syncの設定
+	glfwSwapInterval(1);
+
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Error" << std::endl;
@@ -187,97 +201,113 @@ int main(void)
 
 	// OpenGLのバージョンを表示
 	std::cout << glGetString(GL_VERSION) << std::endl;
+	{
+		float positions[] = {
+			-0.5f, -0.5f,	//0
+			 0.5f, -0.5f,	//1
+			 0.5f,  0.5f,	//2
+			 -0.5f,  0.5f,	//3
+		};
 
-	float positions[] = {
-		-0.5f, -0.5f,	//0
-		 0.5f, -0.5f,	//1
-		 0.5f,  0.5f,	//2
-		 -0.5f,  0.5f,	//3
-	};
+		unsigned int indices[] = {
+			0, 1, 2,
+			2, 3, 0
+		};
 
-	unsigned int indices[] = {
-		0, 1, 2,
-		2, 3, 0
-	};
+		unsigned int vao;
+		GLCall(glGenVertexArrays(1, &vao));
+		GLCall(glBindVertexArray(vao));
 
-	unsigned int buffer = 0;
-	// バッファの生成
-	glGenBuffers(1, &buffer);
+		//-----------------------------------------------------------------------------------------------------------
+		// 
+			//
+		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-	// バインド　バッファの種類　バッファのID
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		// 頂点属性の有効化
+		GLCall( glEnableVertexAttribArray(0) );
 
-	// バッファにデータを格納　
-	glBufferData(GL_ARRAY_BUFFER, 6 * 2 *sizeof(float), positions, GL_STATIC_DRAW);
+		// 頂点属性の設定 
+		// 1:頂点属性のインデックス 
+		// 2:頂点属性の要素数 
+		// 3:データの型 
+		// 4:正規化するかどうか 
+		// 5:データの間隔 
+		// 6:データの先頭からのオフセット
+		GLCall( glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0) );
 
-	// 頂点属性の有効化
-	glEnableVertexAttribArray(0);
+		//-----------------------------------------------------------------------------------------------------------
 
-	// 頂点属性の設定 
-	// 1:頂点属性のインデックス 
-	// 2:頂点属性の要素数 
-	// 3:データの型 
-	// 4:正規化するかどうか 
-	// 5:データの間隔 
-	// 6:データの先頭からのオフセット
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
-	
-	// インデックスバッファの生成
-	unsigned int ibo;
-	// バッファの生成
-	glGenBuffers(1, &ibo);
 
-	// バインド　バッファの種類　バッファのID
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		//-----------------------------------------------------------------------------------------------------------
 
-	// バッファにデータを格納　
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6  * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+		// インデックスバッファの生成
+		IndexBuffer ib(indices, 6);
 
-	
-	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-	std::cout << "VERTEX" << std::endl;
-	std::cout << source.VertexSource << std::endl;
-	std::cout << "FRAGMENT" << std::endl;
-	std::cout << source.FragmentSource << std::endl;
+		//-----------------------------------------------------------------------------------------------------------
 
-	// シェーダーのコンパイル
-	unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-	// シェーダーの使用
-	glUseProgram(shader);
+		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
+		std::cout << "VERTEX" << std::endl;
+		std::cout << source.VertexSource << std::endl;
+		std::cout << "FRAGMENT" << std::endl;
+		std::cout << source.FragmentSource << std::endl;
 
-	// シェーダー Color変数の取得
-	int location = glGetUniformLocation(shader, "u_Color");
-	ASSERT(location != -1);
-	// シェーダー Color変数の設定
-	GLCall( glUniform4f(location, 0.2, 0.3, 0.8, 1.0));
+		// シェーダーのコンパイル
+		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
+		// シェーダーの使用
+		GLCall( glUseProgram(shader) );
 
-	float r = 0.0f;
-	/* Loop until the user closes the window */
-	while (!glfwWindowShouldClose(window))
-	{  
-		// Render here
-		glClear(GL_COLOR_BUFFER_BIT);
+		// シェーダー Color変数の取得
+		int location = glGetUniformLocation(shader, "u_Color");
+		ASSERT(location != -1);
+		// シェーダー Color変数の設定
+		GLCall(glUniform4f(location, 1, 1, 1, 1.0));
 
-		GLCall(glUniform4f(location, r, 0.3, 0.8, 1.0));
-		r += 0.001f;
-		if (r > 1.0f)
+		float r = 0.0f;
+		float increment = 0.05f;
+
+		/* Loop until the user closes the window */
+		while (!glfwWindowShouldClose(window))
 		{
-			r = 0.0f;
+			//Escでプログラムを終了
+			processInput(window);
+
+			// Render here
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			GLCall(glUseProgram(shader));
+			GLCall(glUniform4f(location, r, 0.3, 0.8, 1.0));
+
+			GLCall(glBindVertexArray(vao));
+
+			//index bufferのバインド
+			ib.Bind();
+
+
+			if (r > 1.0f)
+			{
+				increment = -0.001f;
+			}
+			else if (r < 0.0f)
+			{
+				increment = 0.001f;
+			}
+
+			r += increment;
+
+			// 
+			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+
+			// Swap front and back buffers
+			glfwSwapBuffers(window);
+
+			// Poll for and 6process events
+			glfwPollEvents();
+
 		}
 
-		// 三角形を描画
-		GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
-		
-		// Swap front and back buffers
-		glfwSwapBuffers(window);
-
-		// Poll for and process events
-		glfwPollEvents();
-
+		// プログラムの削除
+		GLCall( glDeleteProgram(shader) );
 	}
-
-	// プログラムの削除
-	//glDeleteProgram(shader);
 
 	glfwTerminate();
 	return 0;
