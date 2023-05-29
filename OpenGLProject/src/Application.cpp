@@ -10,7 +10,9 @@
 // 更新日：2023/4/20	OpenGLのError Check機能を追加しました。glGetError()を使っての基本的なBugCheck。
 // 更新日：2023/4/20	Uniformsを追加しました。
 // 更新日：2023/4/21	Vertex arraysを追加しました。
-// 更新日：2023/4/27	オブジェクト指向でコードを再構成
+// 更新日：2023/4/27	オブジェクト指向でコードを再構成(IndexBuffer VertexBuffer)
+// 更新日：2023/5/09	オブジェクト指向でコードを再構成(VertexArray)
+// 更新日：2023/5/29	オブジェクト指向でコードを再構成(VertexArray) (コロナ感染したため2週間遅れます）
 // 
 
 #include <GL/glew.h>
@@ -24,6 +26,10 @@
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+
+#include "VertexArray.h"
+#include "VertexBufferLayout.h"
+
 
 #define ASSERT(x) if (!(x)) __debugbreak();
 #define GLCall(x) GLClearError();\
@@ -175,11 +181,9 @@ int main(void)
 {
 	GLFWwindow* window;
 
-	/* Initialize the library */
 	if (!glfwInit())
 		return -1;
 
-	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(1080, 1080, "Hello World", NULL, NULL);
 	if (!window)
 	{
@@ -188,11 +192,13 @@ int main(void)
 		return -1;
 	}
 
+	// ウィンドウのコンテキストを作成
 	glfwMakeContextCurrent(window); 	
 
 	// V-syncの設定
 	glfwSwapInterval(1);
 
+	// GLEWの初期化
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Error" << std::endl;
@@ -201,6 +207,7 @@ int main(void)
 
 	// OpenGLのバージョンを表示
 	std::cout << glGetString(GL_VERSION) << std::endl;
+
 	{
 		float positions[] = {
 			-0.5f, -0.5f,	//0
@@ -214,29 +221,17 @@ int main(void)
 			2, 3, 0
 		};
 
-		unsigned int vao;
-		GLCall(glGenVertexArrays(1, &vao));
-		GLCall(glBindVertexArray(vao));
+		//unsigned int vao;
+		//GLCall(glGenVertexArrays(1, &vao));
+		//GLCall(glBindVertexArray(vao));
 
-		//-----------------------------------------------------------------------------------------------------------
-		// 
-			//
+		VertexArray va;
 		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
-		// 頂点属性の有効化
-		GLCall( glEnableVertexAttribArray(0) );
+		VertexBufferLayout layout;
+		layout.Push<float>(2);
 
-		// 頂点属性の設定 
-		// 1:頂点属性のインデックス 
-		// 2:頂点属性の要素数 
-		// 3:データの型 
-		// 4:正規化するかどうか 
-		// 5:データの間隔 
-		// 6:データの先頭からのオフセット
-		GLCall( glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0) );
-
-		//-----------------------------------------------------------------------------------------------------------
-
+		va.AddBuffer(vb, layout);
 
 		//-----------------------------------------------------------------------------------------------------------
 
@@ -275,9 +270,9 @@ int main(void)
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			GLCall(glUseProgram(shader));
-			GLCall(glUniform4f(location, r, 0.3, 0.8, 1.0));
+			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-			GLCall(glBindVertexArray(vao));
+			//GLCall(glBindVertexArray(vao));
 
 			//index bufferのバインド
 			ib.Bind();
