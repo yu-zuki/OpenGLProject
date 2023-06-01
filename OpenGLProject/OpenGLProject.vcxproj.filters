@@ -58,5 +58,11 @@
     <ClInclude Include="src\VertexBufferLayout.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="src\StaticFunction.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShaderProgram.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
