@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <unordered_map>
 
 struct ShaderProgramSource
 {
@@ -6,112 +8,31 @@ struct ShaderProgramSource
 	std::string FragmentSource;
 };
 
-static ShaderProgramSource ParseShader(const std::string& filepath)
+class Shader
 {
-	// シェーダーのソースコードの読み込み
-	std::ifstream stream(filepath);
+private:
+	std::string m_FilePath;
+	unsigned int m_RendererID;
+	// キャッシュ
+	std::unordered_map<std::string, int> m_UniformLocationCache;
+public:
+	Shader(const std::string& filepath);
+	~Shader();
 
-	// シェーダーの種類を判別するための列挙型
-	enum class ShaderType
-	{
-		NONE = -1, VERTEX = 0, FRAGMENT = 1
-	};
+	void Bind() const;
+	void Unbind() const;
 
-	std::string line;
-	std::stringstream ss[2];
-	ShaderType type = ShaderType::NONE;
+	// Uniform関連
+	void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+	//void SetUniformMat4f(const std::string& name, const glm::mat4& matrix);
 
-	while (getline(stream, line))	// 1行ずつ読み込み
-	{
-		// シェーダーの種類を判別
-		if (line.find("#shader") != std::string::npos)
-		{
-			// シェーダーの種類を表示
-			if (line.find("vertex") != std::string::npos)
-			{
-				// 頂点シェーダー
-				type = ShaderType::VERTEX;
-			}
-			else if (line.find("fragment") != std::string::npos)
-			{
-				// フラグメントシェーダー
-				type = ShaderType::FRAGMENT;
-			}
-		}
-		else
-		{
-			// シェーダーのソースコードを追加
-			ss[(int)type] << line << '\n';
-		}
-	}
+private:
+	ShaderProgramSource ParseShader(const std::string& filepath);
+	unsigned int CompileShader(unsigned int type, const std::string& source);
+	unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader);
 
-	// シェーダーのソースコードを返却
-	return { ss[0].str(), ss[1].str() };
-}
+	// Uniformの位置を取得
+	int GetUniformLocation(const std::string& name);
 
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-	// シェーダーの作成
-	unsigned int id = glCreateShader(type);
+};
 
-	// シェーダーのソースコードの設定
-	const char* src = source.c_str();
-	glShaderSource(id, 1, &src, nullptr);
-	// シェーダーのコンパイル
-	glCompileShader(id);
-
-	// エラーチェック
-	int result;
-
-	// シェーダーのコンパイル結果を取得
-	glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-	if (result == GL_FALSE)
-	{
-		// シェーダーのコンパイル結果の長さを取得
-		int length;
-		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-
-		// Stack領域でメモリーを確保する
-		char* message = (char*)alloca(length * sizeof(char));
-
-		// シェーダーのコンパイル情報
-		glGetShaderInfoLog(id, length, &length, message);
-
-		// エラーの表示
-		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment")
-			<< " shader!" << std::endl;
-
-		std::cout << message << std::endl;
-		glDeleteShader(id);
-		return 0;
-	}
-
-	return id;
-}
-// シェーダーのコンパイル
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
-{
-	// シェーダーの作成
-	unsigned int program = glCreateProgram();
-	// 頂点シェーダーのコンパイル
-	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-	// フラグメントシェーダーのコンパイル
-	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-	//　プログラムにシェーダーをアタッチ
-	glAttachShader(program, vs);
-	glAttachShader(program, fs);
-
-	// プログラムのリンク
-	glLinkProgram(program);
-
-	// エラーチェック
-	glValidateProgram(program);
-
-	// シェーダーの中間ファイルを削除
-	glDeleteShader(vs);
-	glDeleteShader(fs);
-
-	//　プログラムの返却
-	return program;
-}

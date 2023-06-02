@@ -81,6 +81,7 @@ int main(void)
 		VertexBuffer vb(positions, 4 * 2 * sizeof(float));	//頂点バッファ	インスタンス
 
 		VertexBufferLayout layout;							//頂点バッファレイアウト	インスタンス
+
 		layout.Push<float>(2);
 
 		va.AddBuffer(vb, layout);
@@ -90,24 +91,15 @@ int main(void)
 		// インデックスバッファの生成
 		IndexBuffer ib(indices, 6);
 
+		Shader shader("res/shaders/Basic.shader");		//シェーダープログラム	インスタンス
+		shader.Bind();									//シェーダープログラムのバインド
+		shader.SetUniform4f("u_Color", 1, 1, 1, 1.0);	//シェーダープログラムのColor変数の設定
 		//-----------------------------------------------------------------------------------------------------------
 
-		ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-		std::cout << "VERTEX" << std::endl;
-		std::cout << source.VertexSource << std::endl;
-		std::cout << "FRAGMENT" << std::endl;
-		std::cout << source.FragmentSource << std::endl;
-
-		// シェーダーのコンパイル
-		unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-		// シェーダーの使用
-		GLCall( glUseProgram(shader) );
-
-		// シェーダー Color変数の取得
-		int location = glGetUniformLocation(shader, "u_Color");
-		ASSERT(location != -1);
-		// シェーダー Color変数の設定
-		GLCall(glUniform4f(location, 1, 1, 1, 1.0));
+		va.Unbind();
+		vb.Unbind();
+		ib.Unbind();
+		shader.Unbind();
 
 		float r = 0.0f;
 		float increment = 0.05f;
@@ -121,8 +113,8 @@ int main(void)
 			// Render here
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			GLCall(glUseProgram(shader));
-			GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
+			shader.Bind();
+			shader.SetUniform4f("u_Color",r, 0.3f, 0.8f, 1.0f);
 
 			//GLCall(glBindVertexArray(vao));
 
@@ -151,9 +143,6 @@ int main(void)
 			glfwPollEvents();
 
 		}
-
-		// プログラムの削除
-		GLCall( glDeleteProgram(shader) );
 	}
 
 	glfwTerminate();
