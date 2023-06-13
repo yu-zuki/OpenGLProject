@@ -12,7 +12,11 @@
 // 更新日：2023/4/21	Vertex arraysを追加しました。
 // 更新日：2023/4/27	オブジェクト指向でコードを再構成(IndexBuffer VertexBuffer)
 // 更新日：2023/5/09	オブジェクト指向でコードを再構成(VertexArray)
-// 更新日：2023/5/29	オブジェクト指向でコードを再構成(VertexArray) (コロナ感染したため2週間遅れます）
+// 更新日：2023/5/29	オブジェクト指向でコードを再構成(VertexArray)
+// 更新日：2023/6/9		オブジェクト指向でコードを再構成(Render) 
+// 更新日：2023/6/9		画像をGPUに読み込む機能を追加しました。　stb_image.hを使用しています。
+//						(stb_image.h　使用方法：画像のパスを渡して、RGBAのpixels bufferのpointerがReturnされる） 
+// 更新日：2023/6/13	
 // 
 
 #include <GL/glew.h>
@@ -31,6 +35,7 @@
 
 #include "StaticFunction.h"
 #include "ShaderProgram.h"
+#include "Texture.h"
 
 int main(void)
 {
@@ -96,10 +101,16 @@ int main(void)
 		shader.SetUniform4f("u_Color", 1, 1, 1, 1.0);	//シェーダープログラムのColor変数の設定
 		//-----------------------------------------------------------------------------------------------------------
 
+		//stop
+		Texture texture("res/textures/");	//テクスチャー	インスタンス
+		texture.Bind(0);
+
 		va.Unbind();
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
+
+		Renderer renderer;
 
 		float r = 0.0f;
 		float increment = 0.05f;
@@ -111,15 +122,12 @@ int main(void)
 			processInput(window);
 
 			// Render here
-			glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
 			shader.Bind();
 			shader.SetUniform4f("u_Color",r, 0.3f, 0.8f, 1.0f);
 
-			//GLCall(glBindVertexArray(vao));
-
-			//index bufferのバインド
-			ib.Bind();
+			renderer.Draw(va, ib, shader);
 
 
 			if (r > 1.0f)
@@ -133,8 +141,6 @@ int main(void)
 
 			r += increment;
 
-			// 
-			GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
 
 			// Swap front and back buffers
 			glfwSwapBuffers(window);
