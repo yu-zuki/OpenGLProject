@@ -26,8 +26,9 @@ static bool GLLogCall(const char* funtion, const char* file, int line)
 	return true;
 }
 
-static void processInput(GLFWwindow* window)
+static bool isEscInput(GLFWwindow* window)
 {
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+	return (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS);
+
+		//glfwSetWindowShouldClose(window, true);
 }

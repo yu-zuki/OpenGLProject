@@ -16,7 +16,8 @@
 // 更新日：2023/6/9		オブジェクト指向でコードを再構成(Render) 
 // 更新日：2023/6/9		画像をGPUに読み込む機能を追加しました。　stb_image.hを使用しています。
 //						(stb_image.h　使用方法：画像のパスを渡して、RGBAのpixels bufferのpointerがReturnされる） 
-// 更新日：2023/6/13	
+// 更新日：2023/6/14	Textureクラスを追加しました。
+//						機能：画像をGPUに読み込む機能を追加しました。
 // 
 
 #include <GL/glew.h>
@@ -25,6 +26,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <windows.h>
 
 #include "Renderer.h"
 
@@ -70,10 +72,10 @@ int main(void)
 
 	{
 		float positions[] = {
-			-0.5f, -0.5f,	//0
-			 0.5f, -0.5f,	//1
-			 0.5f,  0.5f,	//2
-			 -0.5f,  0.5f,	//3
+			-0.5f, -0.5f, 0.0f, 0.0f,	//0
+			 0.5f, -0.5f, 1.0f, 0.0f,	//1
+			 0.5f,  0.5f, 1.0f, 1.0f,	//2
+			-0.5f,  0.5f, 0.0f, 1.0f	//3
 		};
 
 		unsigned int indices[] = {
@@ -81,13 +83,17 @@ int main(void)
 			2, 3, 0
 		};
 
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));	//ブレンドの設定 : 透過の設定 
+		GLCall(glEnable(GL_BLEND));									//ブレンドの設定
+
 
 		VertexArray va;										//頂点配列	インスタンス
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));	//頂点バッファ	インスタンス
+		VertexBuffer vb(positions, 4 * 4 * sizeof(float));	//頂点バッファ	インスタンス
 
 		VertexBufferLayout layout;							//頂点バッファレイアウト	インスタンス
 
-		layout.Push<float>(2);
+		layout.Push<float>(2);	//頂点バッファレイアウトの設定
+		layout.Push<float>(2);	//頂点バッファレイアウトの設定
 
 		va.AddBuffer(vb, layout);
 
@@ -102,8 +108,11 @@ int main(void)
 		//-----------------------------------------------------------------------------------------------------------
 
 		//stop
-		Texture texture("res/textures/");	//テクスチャー	インスタンス
-		texture.Bind(0);
+		Texture texture("res/textures/OpenGL.png");				//テクスチャー	インスタンス
+		const int  texturesSlot_0 = 0;
+
+		texture.Bind(texturesSlot_0);
+		shader.SetUniform1i("u_Texture", texturesSlot_0);		//シェーダープログラムのテクスチャー変数の設定 : 0番目のテクスチャースロットを使用する。
 
 		va.Unbind();
 		vb.Unbind();
@@ -119,13 +128,19 @@ int main(void)
 		while (!glfwWindowShouldClose(window))
 		{
 			//Escでプログラムを終了
-			processInput(window);
+			 if (isEscInput(window)){
+				 break;
+			 }			 
 
 			// Render here
 			renderer.Clear();
 
 			shader.Bind();
 			shader.SetUniform4f("u_Color",r, 0.3f, 0.8f, 1.0f);
+
+
+			va.Bind(); //頂点配列のバインド
+			ib.Bind(); //インデックスバッファのバインド
 
 			renderer.Draw(va, ib, shader);
 
@@ -151,6 +166,7 @@ int main(void)
 		}
 	}
 
+	FreeConsole();
 	glfwTerminate();
 	return 0;
 }
