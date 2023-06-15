@@ -39,6 +39,9 @@
 #include "ShaderProgram.h"
 #include "Texture.h"
 
+#include "vendor/glm/glm.hpp"
+#include "vendor/glm/gtc/matrix_transform.hpp"
+
 int main(void)
 {
 	GLFWwindow* window;
@@ -102,9 +105,13 @@ int main(void)
 		// インデックスバッファの生成
 		IndexBuffer ib(indices, 6);
 
+		glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);	//正射影行列の生成
+		
+
 		Shader shader("res/shaders/Basic.shader");		//シェーダープログラム	インスタンス
 		shader.Bind();									//シェーダープログラムのバインド
 		shader.SetUniform4f("u_Color", 1, 1, 1, 1.0);	//シェーダープログラムのColor変数の設定
+		shader.SetUniformMat4f("u_ModelViewProjection", proj);
 		//-----------------------------------------------------------------------------------------------------------
 
 		//stop
