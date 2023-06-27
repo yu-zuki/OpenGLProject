@@ -93,6 +93,12 @@ int main(void)
 
 		test::TestClearColor test;				//テストクラスのインスタンス
 
+		test::Test *currentTest = nullptr;							//テストクラスのポインター
+		test::TestMenu* testMenu = new test::TestMenu(currentTest);	//テストメニューのインスタンス
+		currentTest = testMenu;										//デフォルトTestをTestMenuに設定
+
+		testMenu->RegisterTest<test::TestClearColor>("TestClearColor");	//テストメニューにTestClearColorを追加
+
 		while (!glfwWindowShouldClose(window))
 		{
 			//Escでプログラムを終了
@@ -100,13 +106,26 @@ int main(void)
 				 break;
 			 }			 
 	
-			renderer.Clear();						//レンダラーのクリア			
-
-			test.OnUpdate(0.f);						//テストクラスの更新
-			test.OnRender();						//テストクラスの描画
+			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));	//背景色を黒に指定
+			renderer.Clear();								//レンダラーのクリア			
 
 			ImGui_ImplGlfwGL3_NewFrame(); //Gui
-			test.OnImGuiRender();					//テストクラスのImGuiの描画
+			
+			if (currentTest)
+			{
+				currentTest->OnUpdate(0.f);
+				currentTest->OnRender();
+
+				ImGui::Begin("Test"); //Gui
+				if ( currentTest != testMenu  &&  ImGui::Button("<-") )
+				{
+					delete currentTest;
+					currentTest = testMenu;
+				}
+
+				currentTest->OnImGuiRender();
+				ImGui::End();
+			}
 
 			ImGui::Render(); //ImGuiのレンダリング
 
