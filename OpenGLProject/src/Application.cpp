@@ -47,6 +47,8 @@
 #include "vendor/imgui/imgui.h"
 #include "vendor/imgui/imgui_impl_glfw_gl3.h"
 
+#include "tests/TestClearColor.h"
+
 int main(void)
 {
 	GLFWwindow* window;
@@ -79,76 +81,18 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-		float positions[] = {
-		 -50.0f, -50.0f, 0.0f, 0.0f,	// 0
-		 50.0f,  -50.0f, 1.0f, 0.0f,	// 1
-		 50.0f,   50.0f, 1.0f, 1.0f,    // 2
-		 -50.0f,  50.0f, 0.0f, 1.0f		// 3
-		};
-
-
-		unsigned int indices[] = {
-			0, 1, 2,
-			2, 3, 0
-		};
 
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));	//ブレンドの設定 : 透過の設定 
 		GLCall(glEnable(GL_BLEND));									//ブレンドの設定
 
-
-		VertexArray va;										//頂点配列	インスタンス
-		VertexBuffer vb(positions, 4 * 4 * sizeof(float));	//頂点バッファ	インスタンス
-
-		VertexBufferLayout layout;							//頂点バッファレイアウト	インスタンス
-
-		layout.Push<float>(2);	//頂点バッファレイアウトの設定
-		layout.Push<float>(2);	//頂点バッファレイアウトの設定
-
-		va.AddBuffer(vb, layout);
-
-		//-----------------------------------------------------------------------------------------------------------
-
-		// インデックスバッファの生成
-		IndexBuffer ib(indices, 6);
-
-		glm::mat4 proj = glm::ortho(0.0f, 1920.0f, 0.0f, 1080.0f, -1.0f, 1.0f);	//正投影行列の生成
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0, 0));	//ビュー行列の生成
-
-
-		Shader shader("res/shaders/Basic.shader");		//シェーダープログラム	インスタンス
-		shader.Bind();									//シェーダープログラムのバインド
-
-		//-----------------------------------------------------------------------------------------------------------
-
-		//stop
-		Texture texture("res/textures/OpenGL.png");				//テクスチャー	インスタンス
-		const int  texturesSlot_0 = 0;
-
-		texture.Bind(texturesSlot_0);
-		shader.SetUniform1i("u_Texture", texturesSlot_0);		//シェーダープログラムのテクスチャー変数の設定 : 0番目のテクスチャースロットを使用する。
-
-		va.Unbind();
-		vb.Unbind();
-		ib.Unbind();
-		shader.Unbind();										//シェーダープログラムのアンバインド
-
-		Renderer renderer;										//レンダラー	インスタンス
-
-		glm::vec3 translationA(0.2f, 0.2f, 0);
-		glm::vec3 translationB(100.f, 100.f, 0);
+		Renderer renderer;											//レンダラー	インスタンス
 
 		ImGui::CreateContext();					//ImGuiのコンテキストの作成
 		ImGui_ImplGlfwGL3_Init(window, true);	//ImGuiの初期化
 		ImGui::StyleColorsDark(); 				//ImGuiのスタイルの設定
 
+		test::TestClearColor test;				//テストクラスのインスタンス
 
-
-		float r = 0.0f;
-		float increment = 0.05f;
-
-		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
-		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
 			//Escでプログラムを終了
@@ -158,33 +102,12 @@ int main(void)
 	
 			renderer.Clear();						//レンダラーのクリア			
 
+			test.OnUpdate(0.f);						//テストクラスの更新
+			test.OnRender();						//テストクラスの描画
+
 			ImGui_ImplGlfwGL3_NewFrame(); //Gui
+			test.OnImGuiRender();					//テストクラスのImGuiの描画
 
-
-			shader.Bind();
-
-			va.Bind(); //頂点配列のバインド
-			ib.Bind(); //インデックスバッファのバインド
-
-
-			{
-				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);	//モデル行列の生成
-				glm::mat4 mvp = proj * view * model;	//モデルビュープロジェクション行列の生成
-				shader.SetUniformMat4f("u_ModelViewProjection", mvp);
-				renderer.Draw(va, ib, shader);			
-			}	
-
-			{
-				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);	//モデル行列の生成
-				glm::mat4 mvp = proj * view * model;	//モデルビュープロジェクション行列の生成
-				shader.SetUniformMat4f("u_ModelViewProjection", mvp);
-				renderer.Draw(va, ib, shader);			
-			}
-
-
-			ImGui::SliderFloat3("TranslationA", &translationA.x, 0.0f, 1080.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-			ImGui::SliderFloat3("TranslationB", &translationB.x, 0.0f, 1080.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Render(); //ImGuiのレンダリング
 
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData()); //ImGuiの描画
