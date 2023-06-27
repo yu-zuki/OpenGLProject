@@ -19,6 +19,7 @@
 // 更新日：2023/6/14	Textureクラスを追加しました。
 //						機能：画像をGPUに読み込む機能を追加しました。
 // 更新日：2023/6/28	GUIを追加しました。　imguiを使用しています。
+// 更新日：2023/6/28	基本なテスト機能を追加しました。
 // 
 
 #include <GL/glew.h>
@@ -79,10 +80,10 @@ int main(void)
 
 	{
 		float positions[] = {
-		 0.0f,   0.0f,   0.0f, 0.0f,	// 0
-		 100.0f, 0.0f,   1.0f, 0.0f,	// 1
-		 100.0f, 100.0f, 1.0f, 1.0f,    // 2
-		 0.0f,   100.0f, 0.0f, 1.0f		// 3
+		 -50.0f, -50.0f, 0.0f, 0.0f,	// 0
+		 50.0f,  -50.0f, 1.0f, 0.0f,	// 1
+		 50.0f,   50.0f, 1.0f, 1.0f,    // 2
+		 -50.0f,  50.0f, 0.0f, 1.0f		// 3
 		};
 
 
@@ -133,7 +134,8 @@ int main(void)
 
 		Renderer renderer;										//レンダラー	インスタンス
 
-		glm::vec3 translation(0.2f, 0.2f, 0);
+		glm::vec3 translationA(0.2f, 0.2f, 0);
+		glm::vec3 translationB(100.f, 100.f, 0);
 
 		ImGui::CreateContext();					//ImGuiのコンテキストの作成
 		ImGui_ImplGlfwGL3_Init(window, true);	//ImGuiの初期化
@@ -158,38 +160,33 @@ int main(void)
 
 			ImGui_ImplGlfwGL3_NewFrame(); //Gui
 
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);	//モデル行列の生成
-			glm::mat4 mvp = proj * view * model;	//モデルビュープロジェクション行列の生成
 
 			shader.Bind();
-			shader.SetUniform4f("u_Color",r, 0.3f, 0.8f, 1.0f);
-			shader.SetUniformMat4f("u_ModelViewProjection", mvp);
 
 			va.Bind(); //頂点配列のバインド
 			ib.Bind(); //インデックスバッファのバインド
 
-			renderer.Draw(va, ib, shader);
-
-
-			if (r > 1.0f)
-			{
-				increment = -0.001f;
-			}
-			else if (r < 0.0f)
-			{
-				increment = 0.001f;
-			}
-
-			r += increment;
-
 
 			{
-				ImGui::SliderFloat3("Translation", &translation.x, 0.0f, 1080.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);	//モデル行列の生成
+				glm::mat4 mvp = proj * view * model;	//モデルビュープロジェクション行列の生成
+				shader.SetUniformMat4f("u_ModelViewProjection", mvp);
+				renderer.Draw(va, ib, shader);			
+			}	
 
-				ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			{
+				glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);	//モデル行列の生成
+				glm::mat4 mvp = proj * view * model;	//モデルビュープロジェクション行列の生成
+				shader.SetUniformMat4f("u_ModelViewProjection", mvp);
+				renderer.Draw(va, ib, shader);			
 			}
 
+
+			ImGui::SliderFloat3("TranslationA", &translationA.x, 0.0f, 1080.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+			ImGui::SliderFloat3("TranslationB", &translationB.x, 0.0f, 1080.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 			ImGui::Render(); //ImGuiのレンダリング
+
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData()); //ImGuiの描画
 
 			// Swap front and back buffers
