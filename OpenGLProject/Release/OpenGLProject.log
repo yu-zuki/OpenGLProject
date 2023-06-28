@@ -1,0 +1,2 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(1127,5): error MSB6006: "link.exe" はコード 1181 を伴って終了しました。
+LINK : fatal error LNK1181: 入力ファイル 'glew32s.lib' を開けません。
