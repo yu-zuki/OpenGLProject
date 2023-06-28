@@ -48,6 +48,7 @@
 #include "vendor/imgui/imgui_impl_glfw_gl3.h"
 
 #include "tests/TestClearColor.h"
+#include "tests/TestTexture2D.h"
 
 int main(void)
 {
@@ -91,13 +92,15 @@ int main(void)
 		ImGui_ImplGlfwGL3_Init(window, true);	//ImGuiの初期化
 		ImGui::StyleColorsDark(); 				//ImGuiのスタイルの設定
 
+
 		test::TestClearColor test;				//テストクラスのインスタンス
 
 		test::Test *currentTest = nullptr;							//テストクラスのポインター
 		test::TestMenu* testMenu = new test::TestMenu(currentTest);	//テストメニューのインスタンス
 		currentTest = testMenu;										//デフォルトTestをTestMenuに設定
 
-		testMenu->RegisterTest<test::TestClearColor>("TestClearColor");	//テストメニューにTestClearColorを追加
+		testMenu->RegisterTest<test::TestClearColor>("TestClearColor");		//テストメニューにTestClearColorを追加
+		testMenu->RegisterTest<test::TestTexture2D>("TestTexture2D");		//テストメニューにTestTexture2Dを追加
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -115,6 +118,8 @@ int main(void)
 			{
 				currentTest->OnUpdate(0.f);
 				currentTest->OnRender();
+
+				//ImGui::SetNextWindowSize(ImVec2(500, 500));
 
 				ImGui::Begin("Test"); //Gui
 				if ( currentTest != testMenu  &&  ImGui::Button("<-") )
