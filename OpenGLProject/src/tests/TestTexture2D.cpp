@@ -19,15 +19,15 @@ test::TestTexture2D::TestTexture2D()
 	m_View = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0, 0));		//ビュー行列の生成
 
 	float positions[] = {				//頂点座標
-		-500.0f,	-500.0f, 0.0f, 0.0f,		// 0
-		 500.0f,	-500.0f, 1.0f, 0.0f,		// 1
-		 500.0f,	 500.0f,	1.0f, 1.0f,		// 2
-	    -500.0f,	 500.0f,	0.0f, 1.0f		// 3
+		-500.0f,	-500.0f,    0.0f, 0.0f,		// 0  左下
+		 500.0f,	-500.0f,    1.0f, 0.0f,		// 1　右下
+		 500.0f,	 500.0f,	1.0f, 1.0f,		// 2　右上
+	    -500.0f,	 500.0f,	0.0f, 1.0f		// 3　左上
 	};
 
 	unsigned int indices[] = {
 		0, 1, 2,
-		2, 3, 0
+		2, 3, 0,
 	};
 
 	m_VAO = std::make_unique<VertexArray>();									//頂点配列	インスタンス

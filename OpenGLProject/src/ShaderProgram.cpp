@@ -170,7 +170,7 @@ unsigned int Shader::CreateShader(const std::string& vertexShader, const std::st
 	return program;
 }
 
-int Shader::GetUniformLocation(const std::string& name)
+int Shader::GetUniformLocation(const std::string& name) const
 {
 // キャッシュにある場合はキャッシュから取得
 	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
