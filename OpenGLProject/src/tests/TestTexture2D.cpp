@@ -68,10 +68,10 @@ void test::TestTexture2D::OnRender()
 
 	m_Texture->Bind();
 	{
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), m_TranslationA);		//モデル行列の生成
-		glm::mat4 mvp = m_Proj * m_View * model;											//モデルビュー投影行列の生成
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), m_TranslationA);				//モデル行列の生成
+		glm::mat4 mvp = m_Proj * m_View * model;										//モデルビュー投影行列の生成
 		m_Shader->Bind();																//シェーダープログラムのバインド
-		m_Shader->SetUniformMat4f("u_ModelViewProjection", mvp);										//シェーダープログラムのモデルビュー投影行列変数の設定
+		m_Shader->SetUniformMat4f("u_ModelViewProjection", mvp);						//シェーダープログラムのモデルビュー投影行列変数の設定
 		renderer.Draw(*m_VAO, *m_IndexBuffer, *m_Shader);								//描画
 	}
 	{

@@ -20,6 +20,7 @@
 //						機能：画像をGPUに読み込む機能を追加しました。
 // 更新日：2023/6/28	GUIを追加しました。　imguiを使用しています。
 // 更新日：2023/6/28	基本なテスト機能を追加しました。
+// 更新日：2023/6/28	テクスチャテスト機能を追加しました。
 // 
 
 #include <GL/glew.h>
@@ -57,22 +58,17 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 
-	window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);	// ウィンドウの作成
 	if (!window)
-	{
-		// ウィンドウの作成に失敗
-		glfwTerminate();
+	{	
+		glfwTerminate();	// ウィンドウの作成に失敗
 		return -1;
 	}
 
-	// ウィンドウのコンテキストを作成
-	glfwMakeContextCurrent(window); 	
+	glfwMakeContextCurrent(window); 			// OpenGLのコンテキストを作成
+	glfwSwapInterval(1);						// V-syncの設定		
 
-	// V-syncの設定
-	glfwSwapInterval(1);
-
-	// GLEWの初期化
-	if (glewInit() != GLEW_OK)
+	if (glewInit() != GLEW_OK)					// GLEWの初期化
 	{
 		std::cout << "Error" << std::endl;
 		return -1;
@@ -84,9 +80,7 @@ int main(void)
 	{
 
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));	//ブレンドの設定 : 透過の設定 
-		GLCall(glEnable(GL_BLEND));									//ブレンドの設定
-
-		Renderer renderer;											//レンダラー	インスタンス
+		GLCall(glEnable(GL_BLEND));									//ブレンドの設定										//レンダラー	インスタンス
 
 		ImGui::CreateContext();					//ImGuiのコンテキストの作成
 		ImGui_ImplGlfwGL3_Init(window, true);	//ImGuiの初期化
@@ -109,8 +103,7 @@ int main(void)
 				 break;
 			 }			 
 	
-			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));	//背景色を黒に指定
-			renderer.Clear();								//レンダラーのクリア			
+			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));	//背景色を黒に指定			
 
 			ImGui_ImplGlfwGL3_NewFrame(); //Gui
 			
@@ -118,8 +111,6 @@ int main(void)
 			{
 				currentTest->OnUpdate(0.f);
 				currentTest->OnRender();
-
-				//ImGui::SetNextWindowSize(ImVec2(500, 500));
 
 				ImGui::Begin("Test"); //Gui
 				if ( currentTest != testMenu  &&  ImGui::Button("<-") )
@@ -133,7 +124,6 @@ int main(void)
 			}
 
 			ImGui::Render(); //ImGuiのレンダリング
-
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData()); //ImGuiの描画
 
 			// Swap front and back buffers
@@ -141,11 +131,9 @@ int main(void)
 
 			// Poll for and 6process events
 			glfwPollEvents();
-
 		}
 	}
 
-	FreeConsole();
-	glfwTerminate();
+	glfwTerminate();//GLFWの終了
 	return 0;
 }
